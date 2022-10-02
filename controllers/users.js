@@ -1,9 +1,5 @@
 const User = require('../models/users');
 
-// const DATA_ERROR = 400;
-// const SERVER_ERROR = 500;
-// const NOT_FOUND_ERROR = 404;
-
 const dataError = (res) => res.status(400).send({ message: 'Переданы некорректные данные' });
 const serverError = (res) => res.status(500).send({ message: 'На сервере произошла ошибка' });
 const notFoundError = (res) => res.status(404).send({ message: 'Пользователь по указанному _id не найден' });
