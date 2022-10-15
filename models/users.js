@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+// eslint-disable-next-line import/no-unresolved
+const validator = require('validator');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -11,7 +13,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     minlength: 2,
     maxlength: 30,
+<<<<<<< Updated upstream
     default: 'Исследователь океана',
+=======
+    default: 'Исследователь',
+>>>>>>> Stashed changes
   },
   avatar: {
     type: String,
@@ -36,7 +42,31 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+<<<<<<< Updated upstream
     select: false,
+=======
+    default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    validate: {
+      validator:
+        validator.isURL,
+      message: 'Неверный формат ссылки',
+    },
+  },
+  password: {
+    type: String,
+    required: true,
+    select: false,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    validate: {
+      validator:
+        validator.isEmail,
+      message: 'Неверный формат почты',
+    },
+>>>>>>> Stashed changes
   },
 });
 
