@@ -7,8 +7,6 @@ const AuthorizationError = require('../errors/authorization-err');
 const BadRequestError = require('../errors/bad-request-err');
 const ConflictError = require('../errors/conflict-err');
 const NotFoundError = require('../errors/not-found-err');
-// eslint-disable-next-line import/no-unresolved
-// const ForbiddenError = require('../errors/forbidden-err');
 const ServerError = require('../errors/server-err');
 
 const { JWT_SECRET = 'super-secret-key' } = process.env;
@@ -36,7 +34,7 @@ module.exports.login = async (req, res, next) => {
   }
 };
 
-module.exports.getUserInfo = (req, res, next) => {
+module.exports.getUserInfo = async (req, res, next) => {
   const id = req.user._id;
   try {
     const user = User.findById(id);
@@ -102,7 +100,7 @@ module.exports.updateProfile = (req, res, next) => {
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError' || err.name === 'ValidationError') {
         return next(new BadRequestError('Некорректные данные'));
       }
       return next(new ServerError('Ошибка сервера'));
@@ -112,9 +110,13 @@ module.exports.updateProfile = (req, res, next) => {
 module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (!user) {
+        next(new NotFoundError('Пользователь не найден'));
+      } else res.send(user);
+    })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError' || err.name === 'ValidationError') {
         return next(new BadRequestError('Некорректные данные'));
       }
       return next(new ServerError('Ошибка сервера'));
