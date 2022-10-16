@@ -20,7 +20,7 @@ module.exports.login = async (req, res, next) => {
     if (!user) {
       return next(new AuthorizationError('Неправильные почта или пароль'));
     }
-    const matched = await user.comparePassword(password);
+    const matched = await bcrypt.compare(password, user.password);
     if (!matched) {
       return next(new AuthorizationError('Неправильные почта или пароль'));
     }
@@ -78,18 +78,22 @@ module.exports.createUser = (req, res, next) => {
     name, about, avatar, email, password,
   } = req.body;
   bcrypt.hash(password, 10)
-    .then((hash) => User.create({
-      name, about, avatar, email, password: hash,
-    }))
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return next(new BadRequestError('Некорректные данные'));
-      }
-      if (err.name === 'MongoError' && err.code === 11000) {
-        return next(new ConflictError('Пользователь с таким email уже существует'));
-      }
-      return next(new ServerError('Ошибка сервера'));
+    .then((hash) => {
+      User.create({
+        name, about, avatar, email, password: hash,
+      })
+        .then((user) => {
+          res.send(user);
+        })
+        .catch((err) => {
+          if (err.name === 'ValidationError') {
+            return next(new BadRequestError('Некорректные данные'));
+          }
+          if (err.name === 'MongoError' && err.code === 11000) {
+            return next(new ConflictError('Пользователь с таким email уже существует'));
+          }
+          return next(new ServerError('Ошибка сервера'));
+        });
     });
 };
 

@@ -60,10 +60,7 @@ async function start(req, res, next) {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    app.listen(PORT, () => {
-      // eslint-disable-next-line no-console
-      console.log(`App listening on port ${PORT}`);
-    });
+    await app.listen(PORT);
   } catch (err) {
     next(new ServerError('Ошибка сервера'));
   }
