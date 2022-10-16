@@ -30,12 +30,12 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: [true, 'Данное поле должно быть заполнено'],
     select: false,
   },
   email: {
     type: String,
-    required: true,
+    required: [true, 'Данное поле должно быть заполнено'],
     unique: true,
     validate: {
       validator:
@@ -45,7 +45,7 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-userSchema.toJSON = function toJSON() {
+userSchema.methods.toJSON = function toJSON() {
   const user = this.toObject();
   delete user.password;
   return user;
