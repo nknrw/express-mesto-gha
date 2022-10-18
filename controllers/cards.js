@@ -44,17 +44,33 @@ module.exports.createCard = (req, res, next) => {
 // };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findById(req.params.cardId)
-    .orFail(new NotFoundError('Карточка не найдена'))
+  const { cardId } = req.params;
+  Card.findById(cardId)
+    .orFail(() => new NotFoundError('Карточка не найдена'))
     .then((card) => {
-      if (card.owner.toString() !== req.user._id) {
+      if (!card.owner.equals(req.user._id)) {
         return next(new ForbiddenError('Нет прав на удаление карточки'));
       }
-      return Card.findByIdAndDelete(req.params.cardId)
-        .then((deletedCard) => res.send({ deletedCard }));
+      return card.remove()
+        .then(() => res.send({ message: 'Карточка удалена' }));
+    })
+    .catch(() => next(new ServerError('Произошла ошибка')));
+};
+
+module.exports.likeCard = (req, res, next) => {
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    { $addToSet: { likes: req.user._id } },
+    { new: true, runValidators: true },
+  )
+    .then((card) => {
+      if (card) {
+        res.send({ card });
+      }
+      return next(new NotFoundError('Карточка не найдена'));
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'CastError' || err.name === 'ValidationError') {
         return next(new BadRequestError('Некорректные данные'));
       }
       return next(new ServerError('Произошла ошибка'));
