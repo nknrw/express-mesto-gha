@@ -54,7 +54,12 @@ module.exports.deleteCard = (req, res, next) => {
       return card.remove()
         .then(() => res.send({ message: 'Карточка удалена' }));
     })
-    .catch(() => next(new ServerError('Произошла ошибка')));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return next(new BadRequestError('Некорректные данные'));
+      }
+      return next(new ServerError('Произошла ошибка'));
+    });
 };
 
 module.exports.likeCard = (req, res, next) => {
