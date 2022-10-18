@@ -43,37 +43,20 @@ module.exports.createCard = (req, res, next) => {
 //   }
 // };
 
-// module.exports.deleteCard = (req, res, next) => {
-//   Card.findById(req.params.cardId)
-//     .then((card) => {
-//       if (card) {
-//         if (card.owner.toString() === req.user._id) {
-//           Card.findByIdAndRemove(req.params.cardId)
-//             .then((deletedCard) => res.send({ deletedCard }));
-//         } else {
-//           return next(new ForbiddenError('Нет прав на удаление карточки'));
-//         }
-//       } else {
-//         return next(new NotFoundError('Карточка не найдена'));
-//       }
-//     })
-//     .catch((err) => {
-//       if (err.name === 'CastError') {
-//         return next(new BadRequestError('Некорректные данные'));
-//       }
-//       return next(new ServerError('Произошла ошибка'));
-//     });
-// };
-
 module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId)
-    .orFail(new NotFoundError('Карточка не найдена'))
+    // eslint-disable-next-line consistent-return
     .then((card) => {
-      if (!card.owner.equals(req.user._id)) {
-        return next(new ForbiddenError('Нет прав на удаление карточки'));
+      if (card) {
+        if (card.owner.toString() === req.user._id) {
+          Card.findByIdAndRemove(req.params.cardId)
+            .then((deletedCard) => res.send({ deletedCard }));
+        } else {
+          return next(new ForbiddenError('Нет прав на удаление карточки'));
+        }
+      } else {
+        return next(new NotFoundError('Карточка не найдена'));
       }
-      return Card.findByIdAndRemove(req.params.cardId)
-        .then((deletedCard) => res.send({ deletedCard }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
