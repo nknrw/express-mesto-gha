@@ -68,14 +68,12 @@ module.exports.createCard = (req, res, next) => {
 module.exports.deleteCard = (req, res, next) => {
   Card.findById(req.params.cardId)
     .orFail(new NotFoundError('Карточка не найдена'))
-    // eslint-disable-next-line consistent-return
     .then((card) => {
-      if (card.owner.toString() === req.user._id) {
-        Card.findByIdAndRemove(req.params.cardId)
-          .then((deletedCard) => res.send({ deletedCard }));
-      } else {
+      if (!card.owner.equals(req.user._id)) {
         return next(new ForbiddenError('Нет прав на удаление карточки'));
       }
+      return Card.findByIdAndRemove(req.params.cardId)
+        .then((deletedCard) => res.send({ deletedCard }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
