@@ -82,16 +82,25 @@ module.exports.createUser = (req, res, next) => {
       })
         .then((user) => {
           res.send(user);
-        })
-        .catch((err) => {
-          if (err.name === 'ValidationError') {
-            return next(new BadRequestError('Некорректные данные'));
-          }
-          if (err.code === 11000) {
-            return next(new ConflictError('Пользователь с таким email уже существует'));
-          }
-          return next(new ServerError('Ошибка сервера'));
         });
+      /// / .catch((err) => {
+      //   if (err.name === 'ValidationError') {
+      //     return next(new BadRequestError('Некорректные данные'));
+      //   }
+      //   if (err.code === 11000) {
+      //     return next(new ConflictError('Пользователь с таким email уже существует'));
+      //   }
+      //   return next(new ServerError('Ошибка сервера'));
+      // });
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        return next(new BadRequestError('Некорректные данные'));
+      }
+      if (err.code === 11000) {
+        return next(new ConflictError('Пользователь с таким email уже существует'));
+      }
+      return next(new ServerError('Ошибка сервера'));
     });
 };
 
