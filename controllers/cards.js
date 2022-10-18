@@ -25,22 +25,41 @@ module.exports.createCard = (req, res, next) => {
     });
 };
 
-module.exports.deleteCard = async (req, res, next) => {
-  try {
-    const card = await Card.findByIdAndDelete(req.params.cardId);
-    if (!card) {
-      return next(new NotFoundError('Карточка не найдена'));
-    }
-    if (card.owner.toString() !== req.user._id) {
-      return next(new ForbiddenError('Нет прав на удаление карточки'));
-    }
-    return res.status(200).send({ card });
-  } catch (err) {
-    if (err.name === 'CastError') {
-      return next(new BadRequestError('Некорректные данные'));
-    }
-    return next(new ServerError('Произошла ошибка'));
-  }
+// module.exports.deleteCard = async (req, res, next) => {
+//   try {
+//     const card = await Card.findByIdAndDelete(req.params.cardId);
+//     if (!card) {
+//       return next(new NotFoundError('Карточка не найдена'));
+//     }
+//     if (card.owner.toString() !== req.user._id) {
+//       return next(new ForbiddenError('Нет прав на удаление карточки'));
+//     }
+//     return res.status(200).send({ card });
+//   } catch (err) {
+//     if (err.name === 'CastError') {
+//       return next(new BadRequestError('Некорректные данные'));
+//     }
+//     return next(new ServerError('Произошла ошибка'));
+//   }
+// };
+
+module.exports.deleteCard = (req, res, next) => {
+  const { cardId } = req.params;
+  Card.findById(cardId)
+    .orFail(new NotFoundError('Карточка не найдена'))
+    .then((card) => {
+      if (card.owner.equals(req.user._id)) {
+        return next(new ForbiddenError('Нет прав на удаление карточки'));
+      }
+      return card.remove()
+        .then(() => res.send({ message: 'Карточка удалена' }));
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return next(new BadRequestError('Некорректные данные'));
+      }
+      return next(new ServerError('Произошла ошибка'));
+    });
 };
 
 module.exports.likeCard = (req, res, next) => {
